@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>com.teliacompany.cdl.xml</groupId>
+	<artifactId>sparkxmltoavro</artifactId>
+	<version>1.0</version>
+	<properties>
+		<jdk.version>1.7</jdk.version>
+		<spark-core.version>1.6.0</spark-core.version>
+		<spark-sql.version>1.6.0</spark-sql.version>
+		<log4j.version>1.2.17</log4j.version>
+		<spark-avro.version>2.0.1</spark-avro.version>
+		<spark-xml.version>0.3.3</spark-xml.version>
+		<maven-assembly-plugin.version>2.6</maven-assembly-plugin.version>
+	</properties>
+
+	<dependencies>
+		<dependency>
+			<groupId>org.apache.spark</groupId>
+			<artifactId>spark-core_2.10</artifactId>
+			<version>${spark-core.version}</version>
+			<scope>provided</scope>
+
+			<exclusions>
+				<exclusion>
+					<groupId>org.mortbay.jetty</groupId>
+					<artifactId>jetty-util</artifactId>
+				</exclusion>
+				
+			</exclusions>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.spark</groupId>
+			<artifactId>spark-sql_2.10</artifactId>
+			<version>${spark-sql.version}</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>log4j</groupId>
+			<artifactId>log4j</artifactId>
+			<version>${log4j.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.teliacompany.cdl.xml</groupId>
+			<artifactId>xmlmodel</artifactId>
+			<version>0.0.1-SNAPSHOT</version>
+		</dependency>
+	
+
+		<dependency>
+			<groupId>org.scalatest</groupId>
+			<artifactId>scalatest_2.10</artifactId>
+			<version>2.2.6</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.holdenkarau</groupId>
+			<artifactId>spark-testing-base_2.10</artifactId>
+			<version>${spark-core.version}_0.4.5</version>
+			<scope>test</scope>
+			<exclusions>
+				<exclusion>
+					<groupId>org.apache.avro</groupId>
+					<artifactId>avro</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+
+	</dependencies>
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>net.alchim31.maven</groupId>
+				<artifactId>scala-maven-plugin</artifactId>
+				<version>3.2.2</version>
+				<executions>
+					<execution>
+						<id>scala-compile-first</id>
+						<phase>process-resources</phase>
+						<goals>
+							<goal>add-source</goal>
+							<goal>compile</goal>
+						</goals>
+					</execution>
+					<execution>
+						<id>scala-test-compile</id>
+						<phase>process-test-resources</phase>
+						<goals>
+							<goal>testCompile</goal>
+						</goals>
+					</execution>
+					<execution>
+						<goals>
+							<goal>compile</goal>
+							<goal>testCompile</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<configuration>
+					<skipTests>true</skipTests>
+				</configuration>
+			</plugin>
+
+			<plugin>
+				<groupId>org.scalatest</groupId>
+				<artifactId>scalatest-maven-plugin</artifactId>
+				<version>1.0</version>
+				<configuration>
+					<reportsDirectory>${project.build.directory}/surefire-reports</reportsDirectory>
+					<junitxml>.</junitxml>
+					<filereports>WDF TestSuite.txt</filereports>
+				</configuration>
+				<executions>
+					<execution>
+						<id>test</id>
+						<goals>
+							<goal>test</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+
+			<!-- "package" command plugin -->
+			<plugin>
+				<artifactId>maven-assembly-plugin</artifactId>
+				<version>${maven-assembly-plugin.version}</version>
+				<configuration>
+					<descriptorRefs>
+						<descriptorRef>jar-with-dependencies</descriptorRef>
+					</descriptorRefs>
+				</configuration>
+				<executions>
+					<execution>
+						<id>make-assembly</id>
+						<phase>package</phase>
+						<goals>
+							<goal>single</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>jaxb2-maven-plugin</artifactId>
+				<version>2.2</version>
+				<executions>
+					<execution>
+						<id>xjc</id>
+						<goals>
+							<goal>xjc</goal>
+						</goals>
+						<configuration>
+							<extension>true</extension>
+							<arguments>-Xannotate</arguments>
+						</configuration>
+					</execution>
+
+				</executions>
+				<configuration>
+					<!-- Specify xjb file if you have any 1. Name conflicts occured in xsd 
+						to java models conversion. 2. If you have Multiple xsd files then specify 
+						different package names for each xsd. 3. Any model name if you want to change 
+						without changing the element name in xsd -->
+					<xjbSources>
+						<xjbSource>xsd/global.xjb</xjbSource>
+					</xjbSources>
+					<!-- Location of the xsd files -->
+					<sources>
+						<source>xsd/ExternalBODoc.xsd</source>
+						<source>xsd/toolbox-data-lake.xsd</source>
+						<source>xsd/CompositePartyMaster.xsd</source>
+					</sources>
+					<removeOldOutput>true</removeOldOutput>
+					<clearOutputDir>false</clearOutputDir>
+					<forceRegenerate>true</forceRegenerate>
+					<outputDirectory>src/main/java</outputDirectory>
+				</configuration>
+				<dependencies>
+					<dependency>
+						<groupId>org.jvnet.jaxb2_commons</groupId>
+						<artifactId>jaxb2-basics-annotate</artifactId>
+						<version>0.6.4</version>
+					</dependency>
+					<dependency>
+						<groupId>com.sun.codemodel</groupId>
+						<artifactId>codemodel</artifactId>
+						<version>2.6</version>
+					</dependency>
+				</dependencies>
+			</plugin>
+
+		</plugins>
+	</build>
+</project>
